@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - '3000'
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+    restart: unless-stopped
