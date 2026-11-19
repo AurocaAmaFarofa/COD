@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+@config "../tailwind.config.js";
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.ambient-orb {
+  will-change: transform;
+}
+
+.ambient-orb--top {
+  animation: ambient-drift-top 18s ease-in-out infinite alternate;
+}
+
+.ambient-orb--bottom {
+  animation: ambient-drift-bottom 22s ease-in-out infinite alternate;
+}
+
+@keyframes ambient-drift-top {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-72px, 54px, 0) scale(1.17);
+  }
+}
+
+@keyframes ambient-drift-bottom {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(68px, -48px, 0) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}
