@@ -1,7 +1,7 @@
 function NavIcon({ name }) {
   const common = {
     'aria-hidden': true,
-    className: 'relative z-10 size-5 shrink-0',
+    className: 'size-5 shrink-0',
     fill: 'none',
     viewBox: '0 0 24 24',
     stroke: 'currentColor',
@@ -19,41 +19,41 @@ function NavIcon({ name }) {
       </svg>
     )
   }
-  if (name === 'cadastros') {
+  if (name === 'dashboard') {
     return (
       <svg {...common}>
-        <path d="M8 4h11a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1" />
-        <path d="M8 2h7v5H8zM8 12h9M8 16h9" />
+        <rect x="3" y="3" width="8" height="9" rx="1.5" />
+        <rect x="13" y="3" width="8" height="5" rx="1.5" />
+        <rect x="13" y="10" width="8" height="11" rx="1.5" />
+        <rect x="3" y="14" width="8" height="7" rx="1.5" />
       </svg>
     )
   }
   return (
     <svg {...common}>
-      <rect x="3" y="4" width="18" height="13" rx="2" />
-      <path d="m8 21 4-4 4 4M12 17v4" />
+      <path d="M8 4h11a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1" />
+      <path d="M8 2h7v5H8zM8 12h9M8 16h9" />
     </svg>
   )
 }
 
-export default function NavItem({ label, icon, active, compact, onClick }) {
+export default function NavItem({ label, icon, active, onClick }) {
   return (
     <button
       type="button"
       aria-current={active ? 'page' : undefined}
       onClick={onClick}
-      title={compact ? label : undefined}
-      className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-3 text-left text-sm font-medium text-white transition-shadow duration-300 ${
-        active ? '' : ''
+      title={label}
+      className={`group relative flex h-11 w-full items-center gap-3 overflow-hidden rounded-2xl px-2.5 text-left text-sm font-semibold transition-all duration-300 hover:bg-white/10 ${
+        active
+          ? 'bg-gradient-to-r from-rtc-blue to-rtc-blue/60 text-white shadow-lg shadow-rtc-navy/40'
+          : 'text-rtc-mist/80 hover:text-white'
       }`}
     >
-      <span
-        aria-hidden="true"
-        className={`absolute inset-0 bg-gradient-to-r from-rtc-blue/70 to-transparent transition-opacity duration-500 ease-in-out ${
-          active ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
-        }`}
-      />
       <NavIcon name={icon} />
-      <span className={compact ? 'hidden sm:inline' : ''}>{label}</span>
+      <span className="max-md:hidden whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/sidebar:opacity-100">
+        {label}
+      </span>
     </button>
   )
 }
