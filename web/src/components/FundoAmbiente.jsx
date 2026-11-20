@@ -3,7 +3,7 @@ import FractalGlass from './FractalGlass.jsx'
 import { FUNDO_IMAGEM_URL } from '../config/fundo.js'
 
 // Lê a preferência "fundo estático" das configurações e acompanha quando ela muda.
-function useFundoAnimado() {
+export function useFundoAnimado() {
   const [animado, setAnimado] = useState(() => !document.documentElement.classList.contains('fundo-estatico'))
 
   useEffect(() => {

@@ -57,7 +57,7 @@ export default function CadastrosPage({ catalogos, loading, error: catalogError,
       </header>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(300px,0.8fr)_1.2fr]">
-        <form onSubmit={submit} className="space-y-4 rounded-2xl border border-white/10 bg-slate-950/25 p-5">
+        <form onSubmit={submit} className="cartao space-y-4 rounded-2xl p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold text-white">{editingId ? 'Editar cliente' : 'Novo cadastro · Clientes'}</h2>
             {editingId && <button type="button" onClick={cancelarEdicao} className="text-xs text-slate-400 hover:text-white">Cancelar edição</button>}
@@ -83,7 +83,7 @@ export default function CadastrosPage({ catalogos, loading, error: catalogError,
               <button type="button" onClick={() => setCliente({ ...cliente, locais: [...cliente.locais, { nome: '', endereco: '', padrao: '' }] })} className="text-xs font-medium text-sky-300 hover:text-sky-200">+ Adicionar local</button>
             </div>
             {cliente.locais.map((local, index) => (
-              <div key={index} className="rounded-xl border border-white/10 p-3">
+              <div key={index} className="cartao rounded-xl p-3">
                 <label className="block text-xs text-slate-300">Nome do local {cliente.remetente ? '*' : ''}<input required={cliente.remetente} value={local.nome} onChange={(event) => setCliente({ ...cliente, locais: cliente.locais.map((item, i) => i === index ? { ...item, nome: event.target.value } : item) })} className={inputClass} /></label>
                 <label className="mt-3 block text-xs text-slate-300">Endereço<input value={local.endereco} onChange={(event) => setCliente({ ...cliente, locais: cliente.locais.map((item, i) => i === index ? { ...item, endereco: event.target.value } : item) })} className={inputClass} /></label>
                 <label className="mt-3 block text-xs text-slate-300">Padrão deste local<input value={local.padrao} onChange={(event) => setCliente({ ...cliente, locais: cliente.locais.map((item, i) => i === index ? { ...item, padrao: event.target.value } : item) })} className={inputClass} /></label>
@@ -96,7 +96,7 @@ export default function CadastrosPage({ catalogos, loading, error: catalogError,
           <button type="submit" disabled={saving} className="w-full rounded-xl bg-sky-300 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-sky-200 disabled:opacity-60">{saving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Cadastrar cliente'}</button>
         </form>
 
-        <section className="rounded-2xl border border-white/10 bg-slate-950/20 p-5">
+        <section className="cartao rounded-2xl p-5">
           <header className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-white">Clientes cadastrados</h2>
@@ -107,7 +107,7 @@ export default function CadastrosPage({ catalogos, loading, error: catalogError,
           {(catalogError || error) && <p role="alert" className="mb-3 text-sm text-rose-300">{catalogError}</p>}
           <div className="space-y-2">
             {catalogos.clientes.map((item) => (
-              <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 p-3">
+              <article key={item.id} className="cartao flex flex-wrap items-center justify-between gap-3 rounded-xl p-3">
                 <div><p className="text-sm font-medium text-white">{item.nome}</p><p className="mt-1 text-xs text-slate-400">{item.cnpj} · {item.locais.length} local(is)</p></div>
                 <button type="button" onClick={() => editarCliente(item)} className="rounded-lg px-3 py-1.5 text-xs text-sky-200 hover:bg-sky-300/10">Editar</button>
               </article>

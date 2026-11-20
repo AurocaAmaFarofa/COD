@@ -8,6 +8,8 @@ services:
       - PORT=3000
       # Postgres instalado no Windows (fora do Docker)
       - DB_HOST=host.docker.internal
+      # Confia só no salto imediato (o Nginx), que sobrescreve o X-Forwarded-For.
+      - TRUST_PROXY=1
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     expose:
@@ -16,8 +18,17 @@ services:
 
   web:
     build: ./web
+    environment:
+      # Porta HTTPS vista de fora; usada no redirecionamento de http para https.
+      - HTTPS_PORT=8443
+      # Nome ou IP usado para acessar o site na rede (vai no certificado autoassinado).
+      - CERT_NOME=localhost
     ports:
       - '8080:80'
+      - '8443:443'
+    volumes:
+      # Certificados: coloque cert.pem e key.pem aqui para usar um certificado de verdade.
+      - ./certs:/etc/nginx/certs
     depends_on:
       - backend
     restart: unless-stopped

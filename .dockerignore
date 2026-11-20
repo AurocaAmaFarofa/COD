@@ -3,4 +3,4 @@ web/node_modules
 web/dist
 .git
 .env
-*.log
+*.logcerts

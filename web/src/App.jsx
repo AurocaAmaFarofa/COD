@@ -10,6 +10,7 @@ import { useConfiguracoes } from './hooks/useConfiguracoes.js'
 import { useMe } from './hooks/useMe.js'
 import { useToast } from './hooks/useToast.js'
 import { usuarioPodeEditarModulo } from './utils/regras.js'
+import AdminPage from './pages/AdminPage.jsx'
 import CadastroPage from './pages/CadastroPage.jsx'
 import CadastrosPage from './pages/CadastrosPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
@@ -111,8 +112,10 @@ export default function App() {
             notify={notify}
           />
         )}
+        {pagina === 'admin' && me.usuario.admin && <AdminPage usuario={me.usuario} notify={notify} />}
         {pagina === 'dashboard' && (
           <DashboardPage
+            usuario={me.usuario}
             cargas={cargasState.cargas}
             cancelamentos={cargasState.cancelamentos}
             catalogos={catalogosState}

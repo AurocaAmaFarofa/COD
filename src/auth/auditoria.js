@@ -14,4 +14,24 @@ async function auditar(evento, { usuarioId = null, email = null, ip = null, deta
   }
 }
 
-module.exports = { auditar }
+// Ação feita por um administrador. Roda dentro da MESMA transação da alteração
+// (client): se o log não puder ser gravado, a alteração é desfeita. Nada muda sem rastro.
+// antes/depois guardam o estado antes e depois; motivo é o texto informado pelo admin.
+async function registrarAcaoAdmin(client, {
+  admin,
+  evento,
+  entidade,
+  entidadeId,
+  ip,
+  antes = null,
+  depois = null,
+  motivo = null,
+}) {
+  await client.query(
+    `INSERT INTO auditoria (evento, usuario_id, email, ip, entidade, entidade_id, detalhes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [evento, admin.id, admin.email, ip, entidade, String(entidadeId), { antes, depois, motivo }],
+  )
+}
+
+module.exports = { auditar, registrarAcaoAdmin }

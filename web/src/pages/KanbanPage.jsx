@@ -75,7 +75,7 @@ export default function KanbanPage({ cargas, catalogos, usuario, loading, error,
                 if (!event.currentTarget.contains(event.relatedTarget)) setColunaAlvo(null)
               }}
               onDrop={(event) => soltar(event, modulo.id)}
-              className={`vidro min-w-[265px] rounded-3xl p-3 transition-all duration-200 ${
+              className={`cartao min-w-[265px] rounded-3xl p-3 transition-all duration-200 ${
                 emAlvo ? 'ring-2 ring-sky-300/70 bg-rtc-blue/20' : ''
               } ${alvoInvalido ? 'opacity-70' : ''}`}
             >

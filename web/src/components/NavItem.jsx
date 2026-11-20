@@ -29,6 +29,14 @@ function NavIcon({ name }) {
       </svg>
     )
   }
+  if (name === 'admin') {
+    return (
+      <svg {...common}>
+        <path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    )
+  }
   return (
     <svg {...common}>
       <path d="M8 4h11a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1" />

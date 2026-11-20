@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 
 // Preferências de desempenho do próprio navegador do usuário.
 // Ficam em localStorage porque são uma conveniência local, não dados da operação.
+// modoLeve vem ligado por padrão: fundo parado, sem desfoque de vidro e sem animações.
+// Quem quiser o visual completo desliga o modo leve nas Configurações.
 const CHAVE = 'rtc-configuracoes'
-const PADRAO = { desligarDesfoque: false, fundoEstatico: false, desligarAnimacoes: false }
+const PADRAO = { modoLeve: true, fundoEstatico: false, desligarAnimacoes: false }
 
 function lerConfiguracoes() {
   try {
@@ -18,9 +20,10 @@ export function useConfiguracoes() {
 
   useEffect(() => {
     const html = document.documentElement
-    html.classList.toggle('efeitos-reduzidos', configuracoes.desligarDesfoque)
-    html.classList.toggle('fundo-estatico', configuracoes.fundoEstatico)
-    html.classList.toggle('sem-animacoes', configuracoes.desligarAnimacoes)
+    const { modoLeve, fundoEstatico, desligarAnimacoes } = configuracoes
+    html.classList.toggle('modo-leve', modoLeve)
+    html.classList.toggle('fundo-estatico', modoLeve || fundoEstatico)
+    html.classList.toggle('sem-animacoes', modoLeve || desligarAnimacoes)
     try {
       localStorage.setItem(CHAVE, JSON.stringify(configuracoes))
     } catch {

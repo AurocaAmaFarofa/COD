@@ -15,8 +15,9 @@ export async function entrarComSenha(email, senha) {
   return usuario
 }
 
-export async function cadastrarComSenha({ nome, email, senha }) {
-  const { usuario } = await apiRequest('/auth/cadastro', { method: 'POST', body: { nome, email, senha } })
+// convite = código entregue pelo administrador ao liberar o e-mail.
+export async function cadastrarComSenha({ nome, email, senha, convite }) {
+  const { usuario } = await apiRequest('/auth/cadastro', { method: 'POST', body: { nome, email, senha, convite } })
   return usuario
 }
 

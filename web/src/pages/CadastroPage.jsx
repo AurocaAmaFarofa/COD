@@ -5,7 +5,7 @@ import { cadastrarComSenha, entrarComGoogle } from '../services/authService.js'
 import { REGRAS_SENHA, senhaForte } from '../utils/senha.js'
 
 export default function CadastroPage({ onLogin, onIrParaLogin }) {
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', confirmacao: '' })
+  const [form, setForm] = useState({ nome: '', email: '', convite: '', senha: '', confirmacao: '' })
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -35,7 +35,7 @@ export default function CadastroPage({ onLogin, onIrParaLogin }) {
   return (
     <AuthLayout
       titulo="Criar conta"
-      subtitulo="Somente e-mails autorizados pela RTC podem se cadastrar."
+      subtitulo="Somente e-mails autorizados pela RTC podem se cadastrar. Com Google não é preciso código."
       rodape={<>Já tem conta? <LinkAuth onClick={onIrParaLogin}>Entrar</LinkAuth></>}
     >
       <div className="mt-7">
@@ -45,6 +45,10 @@ export default function CadastroPage({ onLogin, onIrParaLogin }) {
       <form onSubmit={submit} className="space-y-4">
         <CampoAuth id="cad-nome" label="Nome" autoComplete="name" required maxLength={120} value={form.nome} onChange={alterar('nome')} disabled={enviando} />
         <CampoAuth id="cad-email" label="E-mail" type="email" autoComplete="email" required value={form.email} onChange={alterar('email')} disabled={enviando} />
+        <div>
+          <CampoAuth id="cad-convite" label="Código de convite" autoComplete="one-time-code" required maxLength={20} placeholder="XXXXX-XXXXX" aria-describedby="cad-convite-ajuda" value={form.convite} onChange={alterar('convite')} disabled={enviando} />
+          <p id="cad-convite-ajuda" className="mt-1.5 text-xs text-slate-400">Peça o código ao administrador que liberou o seu e-mail.</p>
+        </div>
         <div>
           <CampoAuth id="cad-senha" label="Senha" type="password" autoComplete="new-password" required maxLength={72} aria-describedby="cad-senha-regras" value={form.senha} onChange={alterar('senha')} disabled={enviando} />
           <ul id="cad-senha-regras" className="mt-2 grid grid-cols-1 gap-x-3 gap-y-1 text-xs sm:grid-cols-2">

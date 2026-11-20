@@ -24,33 +24,45 @@ const icones = {
   ),
 }
 
-// Gráfico de barras do mês: uma barra por dia de embarque, com o dia atual destacado.
-function GraficoPorDia({ porDia, diaAtual }) {
-  const maximo = Math.max(1, ...porDia.map((item) => item.valor))
+// Área do acumulado no mês: parte sólida até hoje e linha tracejada até a projeção do fim do mês.
+function GraficoAcumulado({ serieAcumulada, projecao, acumulado, diasNoMes, diaAtual }) {
+  const largura = 600
+  const altura = 200
+  const maximo = Math.max(projecao, acumulado, 1)
+  const xDe = (dia) => ((dia - 1) / Math.max(1, diasNoMes - 1)) * largura
+  const yDe = (valor) => altura - 16 - (valor / maximo) * (altura - 32)
+
+  const pontos = serieAcumulada.map((valor, indice) => [xDe(indice + 1), yDe(valor)])
+  const linha = pontos.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+  const areaFechada = pontos.length ? `${linha} ${xDe(diaAtual).toFixed(1)},${altura} 0,${altura}` : ''
+  const fimX = xDe(diasNoMes)
+  const fimY = yDe(projecao)
+  const inicioX = xDe(diaAtual)
+  const inicioY = yDe(acumulado)
+
   return (
-    <div className="flex h-44 items-end gap-1.5">
-      {porDia.map((item) => {
-        const altura = Math.max(3, (item.valor / maximo) * 100)
-        const futuro = item.dia > diaAtual
-        return (
-          <div key={item.dia} className="group relative flex h-full flex-1 flex-col justify-end">
-            <div
-              title={`Dia ${item.dia}: ${moeda(item.valor)} em ${item.quantidade} carga(s)`}
-              style={{ height: `${altura}%` }}
-              className={`w-full rounded-t-lg transition-all duration-300 group-hover:brightness-125 ${
-                item.dia === diaAtual
-                  ? 'bg-gradient-to-t from-rtc-blue to-sky-300'
-                  : futuro
-                    ? 'bg-white/15'
-                    : 'bg-gradient-to-t from-rtc-blue/50 to-rtc-blue/90'
-              }`}
-            />
-            {(item.dia === 1 || item.dia % 5 === 0) && (
-              <span className="mt-2 text-center text-[10px] tabular-nums text-rtc-mist/60">{item.dia}</span>
-            )}
-          </div>
-        )
-      })}
+    <div>
+      <svg viewBox={`0 0 ${largura} ${altura}`} preserveAspectRatio="none" className="h-44 w-full" role="img" aria-label="Acumulado no mês com projeção até o fim do mês">
+        <defs>
+          <linearGradient id="grad-acumulado" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#3f72af" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#3f72af" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {[0.25, 0.5, 0.75].map((faixa) => (
+          <line key={faixa} x1="0" x2={largura} y1={altura * faixa} y2={altura * faixa} stroke="currentColor" strokeOpacity="0.08" vectorEffect="non-scaling-stroke" />
+        ))}
+        {areaFechada && <polygon points={areaFechada} fill="url(#grad-acumulado)" />}
+        {linha && <polyline points={linha} fill="none" stroke="#3f72af" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />}
+        {diaAtual < diasNoMes && (
+          <line x1={inicioX} y1={inicioY} x2={fimX} y2={fimY} stroke="#9cc4ee" strokeWidth="2" strokeDasharray="6 6" vectorEffect="non-scaling-stroke" />
+        )}
+      </svg>
+      <div className="mt-2 flex justify-between text-[10px] tabular-nums text-rtc-mist/60">
+        <span>1</span>
+        <span>{Math.round(diasNoMes / 2)}</span>
+        <span>{diasNoMes}</span>
+      </div>
     </div>
   )
 }
@@ -67,32 +79,44 @@ export default function PainelMetricas({ cargas, cancelamentos, catalogos, compa
   }))
   const totalEmAndamento = Math.max(1, cargas.length)
 
+  // Séries para os mini gráficos: valores dos últimos dias e somas acumuladas até hoje.
+  const ateHoje = m.porDia.slice(0, m.diaAtual)
+  const serieAcumulada = ateHoje.reduce((lista, item) => [...lista, (lista.at(-1) ?? 0) + item.valor], [])
+  const serieCargas = ateHoje.reduce((lista, item) => [...lista, (lista.at(-1) ?? 0) + item.quantidade], [])
+  const serieDia = ateHoje.slice(-7).map((item) => item.valor)
+
   return (
     <div className={compacto ? 'space-y-5' : 'space-y-6'}>
       <section className={`grid gap-4 sm:grid-cols-2 ${compacto ? 'xl:grid-cols-6' : 'xl:grid-cols-3 2xl:grid-cols-6'}`}>
-        <KpiCard titulo="Dia" valor={moeda(m.dia)} detalhe="Projetado de todas as cargas com embarque hoje" icone={icones.dia} destaque />
-        <KpiCard titulo="Acumulado no mês" valor={moeda(m.acumulado)} detalhe={`${m.cargasNoMes} carga(s) com embarque no mês`} icone={icones.acumulado} />
-        <KpiCard titulo="Projeção do mês" valor={moeda(m.projecao)} detalhe="Ritmo atual aplicado ao mês inteiro" icone={icones.projecao} />
-        <KpiCard titulo="Mês anterior" valor={moeda(m.mesAnterior)} detalhe="Total de fretes do mês passado" icone={icones.anterior} />
-        <KpiCard titulo="Cargas no mês" valor={String(m.cargasNoMes)} detalhe="Cargas com embarque neste mês" icone={icones.cargas} />
-        <KpiCard titulo="Perdidas no mês" valor={String(m.perdidasNoMes)} detalhe={`${moeda(m.valorPerdido)} em frete cancelado`} icone={icones.perdidas} />
+        <KpiCard titulo="Dia" valor={m.dia} formatar={moeda} detalhe="Projetado de todas as cargas com embarque hoje" icone={icones.dia} serie={serieDia} destaque />
+        <KpiCard titulo="Acumulado no mês" valor={m.acumulado} formatar={moeda} detalhe={`${m.cargasNoMes} carga(s) com embarque no mês`} icone={icones.acumulado} serie={serieAcumulada} />
+        <KpiCard titulo="Projeção do mês" valor={m.projecao} formatar={moeda} detalhe="Ritmo atual aplicado ao mês inteiro" icone={icones.projecao} serie={[m.acumulado, m.projecao]} />
+        <KpiCard titulo="Mês anterior" valor={m.mesAnterior} formatar={moeda} detalhe="Total de fretes do mês passado" icone={icones.anterior} />
+        <KpiCard titulo="Cargas no mês" valor={m.cargasNoMes} detalhe="Cargas com embarque neste mês" icone={icones.cargas} serie={serieCargas} />
+        <KpiCard titulo="Perdidas no mês" valor={m.perdidasNoMes} detalhe={`${moeda(m.valorPerdido)} em frete cancelado`} icone={icones.perdidas} />
       </section>
 
-      <section className={`grid gap-4 ${compacto ? 'xl:grid-cols-3' : 'xl:grid-cols-3'}`}>
-        <article className="vidro rounded-3xl p-5 xl:col-span-2">
+      <section className="grid gap-4 xl:grid-cols-3">
+        <article className="cartao rounded-3xl p-5 xl:col-span-2">
           <header className="mb-5 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-white">Embarques do mês</h2>
-              <p className="mt-1 text-xs text-rtc-mist/65">Valor de frete por dia de embarque</p>
+              <h2 className="text-base font-bold text-white">Acumulado do mês</h2>
+              <p className="mt-1 text-xs text-rtc-mist/65">Fretes somados dia a dia, com a projeção até o fim do mês</p>
             </div>
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-rtc-mist">
               {agora.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </span>
           </header>
-          <GraficoPorDia porDia={m.porDia} diaAtual={m.diaAtual} />
+          <GraficoAcumulado
+            serieAcumulada={serieAcumulada}
+            projecao={m.projecao}
+            acumulado={m.acumulado}
+            diasNoMes={m.diasNoMes}
+            diaAtual={m.diaAtual}
+          />
         </article>
 
-        <article className="vidro rounded-3xl p-5">
+        <article className="cartao rounded-3xl p-5">
           <h2 className="text-base font-bold text-white">Cargas por módulo</h2>
           <p className="mt-1 text-xs text-rtc-mist/65">Onde estão as cargas em andamento</p>
           <ul className="mt-5 space-y-4">
@@ -111,7 +135,7 @@ export default function PainelMetricas({ cargas, cancelamentos, catalogos, compa
         </article>
       </section>
 
-      <article className="vidro rounded-3xl p-5">
+      <article className="cartao rounded-3xl p-5">
         <h2 className="text-base font-bold text-white">Próximos embarques</h2>
         {m.proximas.length === 0 ? (
           <p className="mt-4 text-sm text-rtc-mist/65">Nenhuma carga com embarque agendado.</p>

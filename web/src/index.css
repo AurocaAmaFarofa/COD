@@ -31,12 +31,13 @@
 /* Cores do tema claro (padrão). O tema escuro redefine as mesmas variáveis abaixo. */
 :root {
   color-scheme: light;
-  --fundo-base: #eef3f9;
+  --fundo-base: #e3eaf3;
+  --superficie: #f4f7fb;
   --vignette: rgba(255, 255, 255, 0.85);
-  --vidro: rgb(255 255 255 / 0.3);
+  --vidro: rgba(255, 255, 255, 0.561);
   --vidro-borda: rgb(15 42 74 / 0.12);
   --vidro-forte: rgb(255 255 255 / 0.9);
-  --campo: #ffffff;
+  --campo: #f4f7fb;
   --texto: #0f2a4a;
 }
 
@@ -58,11 +59,12 @@ html[data-tema='escuro'] {
   --color-sky-200: #cfe2f7;
   --color-sky-300: #9cc4ee;
   --color-sky-400: #6c9fd6;
-  --fundo-base: #05101f;
-  --vignette: rgba(3, 6, 13, 0.9);
-  --vidro: rgb(255 255 255 / 0.06);
+  --fundo-base: #132a45a4;
+  --vignette: rgba(12, 28, 48, 0.8);
+  --vidro: rgba(15, 42, 74, 0.681);
   --vidro-borda: rgb(255 255 255 / 0.12);
   --vidro-forte: rgb(10 22 44 / 0.85);
+  --superficie: #0f2440;
   --campo: #0f2440;
   --texto: #f0f5fb;
 }
@@ -164,13 +166,26 @@ input[type='datetime-local'] {
   border: 1px solid var(--vidro-borda);
   box-shadow: 0 10px 30px -12px rgb(15 42 74 / 0.18);
   -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(1px);
 }
 
 .vidro-forte {
   background: var(--vidro-forte);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+}
+
+/* Cartão sólido: painéis de conteúdo (KPIs, gráficos, listas, formulários).
+ * Não é transparente, então o texto fica sempre legível. */
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 1px 2px rgb(15 42 74 / 0.04), 0 12px 28px -18px rgb(15 42 74 / 0.22);
+}
+
+.cartao-forte {
+  background: var(--superficie);
+  box-shadow: 0 30px 80px -20px rgb(0 0 0 / 0.35);
 }
 
 /* Logo branca da RTC escurecida para aparecer no tema claro. */
@@ -214,18 +229,29 @@ html[data-tema='escuro'] input[type='date']::-webkit-calendar-picker-indicator {
 
 /* ---------- Preferências de desempenho (Configurações) ---------- */
 
-html.efeitos-reduzidos .vidro,
-html.efeitos-reduzidos .vidro-forte {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  background: var(--vidro-forte);
-}
-
 html.sem-animacoes *,
 html.sem-animacoes *::before,
 html.sem-animacoes *::after {
   animation: none !important;
   transition-duration: 0ms !important;
+}
+
+/* Modo leve (padrão): sem desfoque de vidro, o efeito que mais pesa na placa de vídeo.
+ * O cartão de vidro forte fica opaco para o texto continuar legível. */
+html.modo-leve .vidro,
+html.modo-leve .vidro-forte,
+html.modo-leve [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html.modo-leve .vidro-forte {
+  background: var(--superficie);
+}
+
+/* Manchas de luz decorativas desenhadas com filtro de desfoque. */
+html.modo-leve .luz-decorativa {
+  display: none;
 }
 
 /* ---------- Ação de arrastar carga ---------- */

@@ -142,16 +142,26 @@ export default function FractalGlass({ animado = true }) {
 
     ajustarTamanho()
     desenhar(0)
-    if (animado) quadro = requestAnimationFrame(laco)
+    // Quem pediu menos movimento no sistema operacional recebe o fundo parado.
+    const animar = animado && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (animar) quadro = requestAnimationFrame(laco)
+
+    // Aba em segundo plano: para de desenhar e retoma quando ela volta a aparecer.
+    const aoMudarVisibilidade = () => {
+      cancelAnimationFrame(quadro)
+      if (animar && !document.hidden) quadro = requestAnimationFrame(laco)
+    }
+    document.addEventListener('visibilitychange', aoMudarVisibilidade)
 
     const aoRedimensionar = () => {
       ajustarTamanho()
-      desenhar(animado ? (performance.now() - inicio) / 1000 : 0)
+      desenhar(animar ? (performance.now() - inicio) / 1000 : 0)
     }
     window.addEventListener('resize', aoRedimensionar)
     return () => {
       cancelAnimationFrame(quadro)
       window.removeEventListener('resize', aoRedimensionar)
+      document.removeEventListener('visibilitychange', aoMudarVisibilidade)
       gl.deleteProgram(programa)
       gl.deleteBuffer(buffer)
     }

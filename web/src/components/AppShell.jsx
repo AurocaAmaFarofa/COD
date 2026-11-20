@@ -17,7 +17,7 @@ export default function AppShell({
     <div className="relative isolate flex h-screen flex-col overflow-hidden font-sans text-rtc-cream md:flex-row">
       <FundoAmbiente />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-6 p-6 md:flex-row md:gap-10 md:p-10">
-        <Sidebar pagina={pagina} onNavigate={onNavigate} />
+        <Sidebar pagina={pagina} onNavigate={onNavigate} mostrarAdmin={Boolean(usuario?.admin)} />
         <main className="vidro relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] shadow-2xl shadow-black/30">
           <Topbar
             usuario={usuario}

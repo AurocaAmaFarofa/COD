@@ -3,8 +3,9 @@ const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const usuarios = require('../auth/usuarios')
 const bloqueio = require('../auth/bloqueio')
+const convite = require('../auth/convite')
 const { auditar } = require('../auth/auditoria')
-const { criarSessao, encerrarSessao, verificarAcesso, exigirLogin } = require('../auth/sessao')
+const { criarSessao, encerrarSessao, lerToken, revogarSessoes, verificarAcesso, exigirLogin } = require('../auth/sessao')
 
 const router = express.Router()
 
@@ -36,7 +37,7 @@ async function concluirLogin(req, res, usuario, metodo) {
   const acesso = await verificarAcesso(usuario)
   if (!acesso) return null
   bloqueio.limparFalhas({ email: usuario.email, ip: req.ip })
-  criarSessao(res, usuario.id)
+  criarSessao(res, acesso.usuario)
   await auditar('login_ok', { usuarioId: usuario.id, email: usuario.email, ip: req.ip, detalhes: { metodo } })
   return res.json({ usuario: usuarios.montarPerfil(acesso.usuario, acesso.modulos) })
 }
@@ -65,12 +66,14 @@ router.get('/auth/config', (req, res) => {
 })
 
 // ---------------------------------------------------------------------
-// Cadastro com e-mail e senha
+// Cadastro com e-mail e senha. Exige o código de convite gerado pelo admin na
+// allowlist: é ele que prova que quem cadastra é o dono do e-mail.
 // ---------------------------------------------------------------------
 router.post('/auth/cadastro', async (req, res) => {
   const email = usuarios.normalizarEmail(req.body?.email)
   const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : ''
   const senha = req.body?.senha
+  const codigoConvite = req.body?.convite
   // Contador próprio do cadastro, para não somar com as tentativas de login.
   const alvo = { ip: `cadastro:${req.ip}` }
 
@@ -86,12 +89,12 @@ router.post('/auth/cadastro', async (req, res) => {
 
   const permissao = await usuarios.buscarPermissao(email)
   const existente = await usuarios.buscarPorEmail(email)
-  if (!permissao || existente) {
-    await auditar('cadastro_negado', {
-      email,
-      ip: req.ip,
-      detalhes: { motivo: !permissao ? 'fora_da_allowlist' : 'email_ja_cadastrado' },
-    })
+  const conviteOk = convite.conviteValido(permissao, codigoConvite)
+  if (!permissao || existente || !conviteOk) {
+    let motivo = 'convite_invalido'
+    if (!permissao) motivo = 'fora_da_allowlist'
+    else if (existente) motivo = 'email_ja_cadastrado'
+    await auditar('cadastro_negado', { email, ip: req.ip, detalhes: { motivo } })
     bloqueio.registrarFalha(alvo)
     return res.status(400).json({ erro: MSG_CADASTRO })
   }
@@ -101,6 +104,7 @@ router.post('/auth/cadastro', async (req, res) => {
     email,
     senhaHash: await bcrypt.hash(senha, 12),
     modulos: permissao.modulos,
+    aoCriar: (client) => convite.consumirConvite(client, email),
   })
   await auditar('cadastro', { usuarioId: usuario.id, email, ip: req.ip, detalhes: { metodo: 'senha' } })
 
@@ -114,12 +118,13 @@ router.post('/auth/cadastro', async (req, res) => {
 router.post('/auth/login', async (req, res) => {
   const email = usuarios.normalizarEmail(req.body?.email)
   const senha = typeof req.body?.senha === 'string' ? req.body.senha : ''
+  // E-mail acima do tamanho da coluna não existe; recusar antes evita que a tentativa
+  // escape da auditoria (o INSERT falharia).
+  if (!email || !senha || email.length > 255) return res.status(400).json({ erro: 'Informe e-mail e senha.' })
   const alvo = { email, ip: req.ip }
 
   const espera = bloqueio.tempoBloqueado(alvo)
   if (espera) return responderBloqueio(res, espera)
-
-  if (!email || !senha) return res.status(400).json({ erro: 'Informe e-mail e senha.' })
 
   const usuario = await usuarios.buscarPorEmail(email)
   const senhaOk = await bcrypt.compare(senha.slice(0, 200), usuario?.senha_hash || HASH_FALSO)
@@ -207,7 +212,14 @@ router.post('/auth/google', async (req, res) => {
 // ---------------------------------------------------------------------
 // Sessão
 // ---------------------------------------------------------------------
+// Logout revoga o token no servidor: mesmo que alguém tenha copiado o cookie, ele para
+// de funcionar. Vale para todas as sessões do usuário (todos os navegadores).
 router.post('/auth/logout', async (req, res) => {
+  const payload = lerToken(req)
+  if (payload?.sub) {
+    await revogarSessoes(payload.sub)
+    await auditar('logout', { usuarioId: payload.sub, ip: req.ip })
+  }
   encerrarSessao(res)
   res.status(204).end()
 })

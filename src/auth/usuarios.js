@@ -5,7 +5,7 @@ function normalizarEmail(email) {
 }
 
 async function buscarPermissao(email) {
-  const { rows } = await db.query('SELECT email, modulos FROM usuarios_permitidos WHERE email = $1', [email])
+  const { rows } = await db.query('SELECT email, modulos, convite_hash, convite_expira_em FROM usuarios_permitidos WHERE email = $1', [email])
   return rows[0] ?? null
 }
 
@@ -25,7 +25,8 @@ async function buscarPorId(id) {
 }
 
 // Cria o usuário e os vínculos usuario_modulo definidos na allowlist, numa única transação.
-async function criarUsuario({ nome, email, senhaHash = null, googleSub = null, fotoUrl = null, modulos }) {
+// aoCriar(client, usuario) roda dentro da mesma transação (ex.: consumir o convite).
+async function criarUsuario({ nome, email, senhaHash = null, googleSub = null, fotoUrl = null, modulos, aoCriar }) {
   return db.transacao(async (client) => {
     const { rows } = await client.query(
       `INSERT INTO usuarios (nome, email, senha_hash, google_sub, foto_url)
@@ -40,6 +41,7 @@ async function criarUsuario({ nome, email, senhaHash = null, googleSub = null, f
        ON CONFLICT DO NOTHING`,
       [usuario.id, modulos],
     )
+    if (aoCriar) await aoCriar(client, usuario)
     return usuario
   })
 }
@@ -86,6 +88,7 @@ function montarPerfil(usuario, modulos) {
     nome: usuario.nome,
     email: usuario.email,
     foto_url: usuario.foto_url,
+    admin: usuario.papel === 'admin',
     avatar: iniciais(usuario.nome),
     modulos: modulos.map((modulo) => modulo.codigo.toLowerCase()),
     modulos_detalhe: modulos.map((modulo) => ({
