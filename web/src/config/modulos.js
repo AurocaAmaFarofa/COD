@@ -1,6 +1,6 @@
 export const MODULOS = [
   { id: 'comercial', nome: 'Comercial', habilitado: true },
-  { id: 'contratacao', nome: 'Contratação', habilitado: false },
+  { id: 'contratacao', nome: 'Contratação', habilitado: true },
   { id: 'gr', nome: 'Gerenciamento de Risco', habilitado: false },
   { id: 'embarque', nome: 'Embarque', habilitado: false },
   { id: 'documental', nome: 'Documental', habilitado: false },

@@ -1,5 +1,4 @@
 import { database } from '../data/data.js'
-import { STATUS_CARGA } from '../config/modulos.js'
 import { apiRequest, simularLatencia, USE_MOCK } from './api.js'
 import { getMe } from './authService.js'
 import {
@@ -7,6 +6,7 @@ import {
   validarCancelamento,
   validarCriacaoCarga,
   validarEdicaoCarga,
+  validarMovimento,
 } from '../utils/regras.js'
 
 const copiarCarga = (carga) => ({ ...carga })
@@ -16,14 +16,22 @@ const buscarNoMock = (id) => {
   return carga
 }
 
-export async function listarCargas({ incluirArquivadas = false } = {}) {
+// Cargas em andamento (as finalizadas e canceladas saem desta lista, RF07 e RF14).
+export async function listarCargas() {
   if (USE_MOCK) {
     await simularLatencia()
-    return database.cargas
-      .filter((carga) => incluirArquivadas || carga.status !== STATUS_CARGA.CANCELADA)
-      .map(copiarCarga)
+    return database.cargas.map(copiarCarga)
   }
-  return apiRequest(`/cargas${incluirArquivadas ? '?incluir_arquivadas=true' : ''}`)
+  return apiRequest('/cargas')
+}
+
+// Registro das cargas canceladas, usado pelo dashboard (a carga em si é excluída, RF14).
+export async function listarCancelamentos() {
+  if (USE_MOCK) {
+    await simularLatencia()
+    return database.cancelamentos.map((item) => ({ ...item }))
+  }
+  return apiRequest('/cargas/cancelamentos')
 }
 
 export async function buscarCarga(id) {
@@ -50,7 +58,6 @@ export async function criarCarga(dados) {
         : Number(dados.peso_toneladas),
       padrao_embarque: local.padrao ?? '',
       modulo_atual: 'comercial',
-      status: STATUS_CARGA.EM_ANDAMENTO,
       criada_em: new Date().toISOString(),
       atualizada_em: new Date().toISOString(),
     }
@@ -84,16 +91,36 @@ export async function atualizarCarga(id, dados) {
   return apiRequest(`/cargas/${id}`, { method: 'PATCH', body: dados })
 }
 
+// Arrastar a carga entre colunas. O back-end deve validar de novo (RN08).
+export async function moverCarga(id, destino) {
+  const usuario = await getMe()
+  if (USE_MOCK) {
+    const carga = buscarNoMock(id)
+    validarMovimento(usuario, carga, destino)
+    await simularLatencia()
+    carga.modulo_atual = destino
+    carga.atualizada_em = new Date().toISOString()
+    return copiarCarga(carga)
+  }
+  return apiRequest(`/cargas/${id}/mover`, { method: 'POST', body: { modulo: destino } })
+}
+
+// RF14: a carga é excluída do sistema; o cancelamento fica registrado para o dashboard.
 export async function cancelarCarga(id, motivo = '') {
   const usuario = await getMe()
   validarCancelamento(usuario)
   if (USE_MOCK) {
     const carga = buscarNoMock(id)
     await simularLatencia()
-    carga.status = STATUS_CARGA.CANCELADA
-    carga.motivo_cancelamento = motivo.trim()
-    carga.atualizada_em = new Date().toISOString()
-    return copiarCarga(carga)
+    database.cancelamentos.unshift({
+      id: carga.id,
+      cliente_id: carga.cliente_id,
+      frete_empresa: carga.frete_empresa,
+      motivo: motivo.trim(),
+      cancelado_em: new Date().toISOString(),
+    })
+    database.cargas.splice(database.cargas.indexOf(carga), 1)
+    return { id }
   }
   return apiRequest(`/cargas/${id}/cancelar`, { method: 'POST', body: { motivo } })
 }

@@ -1,3 +1,9 @@
+// Campo sem permissão: mesmo fundo de um campo editável, com texto mais apagado e sem borda.
+// Assim o usuário vê que a informação existe, mas não pode alterá-la (RF02).
+const classeBase = 'mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition'
+const classeEditavel = `${classeBase} border-white/15 bg-[var(--campo)] text-white focus:border-sky-300 focus:ring-2 focus:ring-sky-300/30`
+const classeBloqueada = `${classeBase} border-transparent bg-[var(--campo)] text-white/45`
+
 function SelectField({ field, value, disabled, catalogos, carga, onChange }) {
   let options = []
   if (field.type === 'cliente') {
@@ -18,11 +24,7 @@ function SelectField({ field, value, disabled, catalogos, carga, onChange }) {
       aria-invalid={Boolean(field.error)}
       aria-describedby={field.error ? `${field.id}-error` : undefined}
       onChange={(event) => onChange(event.target.value || null)}
-      className={`mt-1.5 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-sky-400 ${
-        disabled
-          ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500'
-          : 'border-white/15 bg-slate-950/60 text-white'
-      }`}
+      className={disabled ? classeBloqueada : classeEditavel}
     >
       <option value="">Selecione</option>
       {options.map((option) => (
@@ -36,11 +38,7 @@ function SelectField({ field, value, disabled, catalogos, carga, onChange }) {
 
 export default function CampoCarga({ field, value, disabled, catalogos, carga, onChange, error }) {
   const controlDisabled = disabled || field.readOnly || (field.type === 'local' && !carga.cliente_id)
-  const controlClass = `mt-1.5 w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:border-sky-400 ${
-    controlDisabled
-      ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500'
-      : 'border-white/15 bg-slate-950/60 text-white'
-  }`
+  const controlClass = controlDisabled ? classeBloqueada : classeEditavel
 
   const control = ['cliente', 'local'].includes(field.type)
     || field.type === 'select'
@@ -50,7 +48,7 @@ export default function CampoCarga({ field, value, disabled, catalogos, carga, o
       : <input id={field.id} type={field.type === 'currency' ? 'number' : field.type} value={value ?? ''} disabled={controlDisabled} required={field.required} aria-invalid={Boolean(error)} aria-describedby={error ? `${field.id}-error` : undefined} min={field.type === 'number' || field.type === 'currency' ? '0' : undefined} step={field.type === 'currency' || field.id === 'aliquota_icms' ? '0.01' : undefined} onChange={(event) => onChange(event.target.value)} className={controlClass} />
 
   return (
-    <label className="block text-sm font-medium text-slate-200">
+    <label className="block text-sm font-semibold text-rtc-mist">
       {field.label}{field.required && <span className="ml-1 text-sky-300">*</span>}
       {control}
       {error && <span id={`${field.id}-error`} role="alert" className="mt-1 block text-xs text-rose-300">{error}</span>}

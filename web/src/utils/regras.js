@@ -47,6 +47,23 @@ export function validarEdicaoCarga(usuario, carga, dados) {
   }
 }
 
+// RN02/RN03: o usuário só move a carga se ela estiver no módulo dele.
+// RF04: o avanço segue a ordem dos módulos. RF12: devolução só da Contratação ao Comercial.
+export function validarMovimento(usuario, carga, destino) {
+  const ordem = MODULOS.filter((modulo) => modulo.habilitado).map((modulo) => modulo.id)
+  const origem = carga.modulo_atual
+  const indiceOrigem = ordem.indexOf(origem)
+  const indiceDestino = ordem.indexOf(destino)
+
+  exigir(indiceOrigem !== -1 && indiceDestino !== -1, 'Módulo inválido.')
+  exigir(origem !== destino, 'A carga já está neste módulo.')
+  exigir(usuarioPodeEditarModulo(usuario, origem), 'Esta carga está em um módulo que você não acessa.')
+
+  const avanco = indiceDestino === indiceOrigem + 1
+  const devolucao = origem === 'contratacao' && destino === 'comercial'
+  exigir(avanco || devolucao, 'Movimento não permitido para esta carga.')
+}
+
 export function validarCancelamento(usuario) {
   exigir(usuarioPodeEditarModulo(usuario, 'comercial'), 'Somente o Comercial pode cancelar cargas.')
 }

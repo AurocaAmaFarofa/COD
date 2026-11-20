@@ -1,52 +1,239 @@
 @import 'tailwindcss';
 @config "../tailwind.config.js";
 
+/*
+ * Tema claro (branco). As cores usadas nos componentes são redefinidas aqui:
+ * "white" vira azul-marinho escuro (texto), "slate-950" vira branco (painéis e campos)
+ * e "sky" vira o azul da marca. Assim os componentes continuam com as mesmas classes.
+ */
+@theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+
+  --color-white: #0f2a4a;
+  --color-rtc-cream: #0f2a4a;
+  --color-rtc-mist: #4a6382;
+
+  --color-slate-950: #ffffff;
+  --color-slate-900: #f7f9fc;
+  --color-slate-800: #e6edf6;
+  --color-slate-400: #5b7290;
+  --color-slate-300: #3d5a80;
+  --color-slate-200: #2c4661;
+  --color-slate-100: #1b3550;
+  --color-slate-500: #5b7290;
+  --color-slate-600: #4a6382;
+
+  --color-sky-200: #2a5a8f;
+  --color-sky-300: #3f72af;
+  --color-sky-400: #2f5f9e;
+}
+
+/* Cores do tema claro (padrão). O tema escuro redefine as mesmas variáveis abaixo. */
+:root {
+  color-scheme: light;
+  --fundo-base: #eef3f9;
+  --vignette: rgba(255, 255, 255, 0.85);
+  --vidro: rgb(255 255 255 / 0.3);
+  --vidro-borda: rgb(15 42 74 / 0.12);
+  --vidro-forte: rgb(255 255 255 / 0.9);
+  --campo: #ffffff;
+  --texto: #0f2a4a;
+}
+
+/* Tema escuro: troca as cores do texto, dos painéis e do fundo.
+ * Os utilitários do Tailwind leem essas variáveis, então as classes continuam iguais. */
+html[data-tema='escuro'] {
+  color-scheme: dark;
+  --color-white: #ffffff;
+  --color-rtc-cream: #f9f7f7;
+  --color-rtc-mist: #dbe2ef;
+  --color-slate-950: #07152a;
+  --color-slate-900: #0b1f3a;
+  --color-slate-800: #163255;
+  --color-slate-500: #7f97b3;
+  --color-slate-400: #9fb3cc;
+  --color-slate-300: #bcccdf;
+  --color-slate-200: #d6e2f0;
+  --color-slate-100: #e6eef8;
+  --color-sky-200: #cfe2f7;
+  --color-sky-300: #9cc4ee;
+  --color-sky-400: #6c9fd6;
+  --fundo-base: #05101f;
+  --vignette: rgba(3, 6, 13, 0.9);
+  --vidro: rgb(255 255 255 / 0.06);
+  --vidro-borda: rgb(255 255 255 / 0.12);
+  --vidro-forte: rgb(10 22 44 / 0.85);
+  --campo: #0f2440;
+  --texto: #f0f5fb;
+}
+
 html,
 body,
 #root {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  background: var(--fundo-base);
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-.ambient-orb {
-  will-change: transform;
+/* Cursor de mão em tudo que é clicável; cursor de bloqueado quando desabilitado. */
+button,
+[role='button'],
+a,
+select,
+summary,
+label[for] {
+  cursor: pointer;
 }
 
-.ambient-orb--top {
-  animation: ambient-drift-top 18s ease-in-out infinite alternate;
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
 }
 
-.ambient-orb--bottom {
-  animation: ambient-drift-bottom 22s ease-in-out infinite alternate;
+/* Calendário dos campos de data: ícone escuro no tema claro. */
+input[type='date'],
+input[type='datetime-local'] {
+  color-scheme: light;
 }
 
-@keyframes ambient-drift-top {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
+/* ---------- Fundo: fractal glass em canvas ---------- */
+
+.fundo-app {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--fundo-base);
+}
+
+/* Imagem de fundo: cobre a tela e fica atrás da parede fractal. */
+.fundo-foto {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Véu azul-marinho leve sobre a foto, para o conteúdo continuar legível. */
+.fundo-foto::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(15 42 74 / 0.25);
+}
+
+.fractal-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Barra de rolagem discreta no conteúdo. */
+.scrollbar-fino {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(15 42 74 / 0.25) transparent;
+}
+
+/* Vinheta: clareia as bordas para o conteúdo respirar. */
+.fundo-app::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    80% 90% at 50% 50%,
+    transparent 10%,
+    var(--vignette) 100%
+  );
+}
+
+/* ---------- Vidro (main, cards, header, sidebar) ---------- */
+
+.vidro {
+  background: var(--vidro);
+  border: 1px solid var(--vidro-borda);
+  box-shadow: 0 10px 30px -12px rgb(15 42 74 / 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.vidro-forte {
+  background: var(--vidro-forte);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+/* Logo branca da RTC escurecida para aparecer no tema claro. */
+.logo-tema {
+  filter: brightness(0);
+}
+
+html[data-tema='escuro'] .logo-tema {
+  filter: none;
+}
+
+html[data-tema='escuro'] input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* ---------- Animação de bounce ---------- */
+
+.bounce-suave {
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Aplicada à ilha só ao abrir: ela cresce com um leve overshoot e assenta. */
+.ilha-bounce {
+  animation: ilha-bounce 620ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ilha-bounce {
+  0% {
+    transform: scale(0.9);
   }
-
-  to {
-    transform: translate3d(-72px, 54px, 0) scale(1.17);
+  55% {
+    transform: scale(1.06);
+  }
+  80% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
-@keyframes ambient-drift-bottom {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
+/* ---------- Preferências de desempenho (Configurações) ---------- */
 
-  to {
-    transform: translate3d(68px, -48px, 0) scale(1.15);
-  }
+html.efeitos-reduzidos .vidro,
+html.efeitos-reduzidos .vidro-forte {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--vidro-forte);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ambient-orb {
-    animation: none;
-  }
+html.sem-animacoes *,
+html.sem-animacoes *::before,
+html.sem-animacoes *::after {
+  animation: none !important;
+  transition-duration: 0ms !important;
+}
+
+/* ---------- Ação de arrastar carga ---------- */
+
+[draggable='true'] {
+  cursor: grab;
+}
+
+[draggable='true']:active {
+  cursor: grabbing;
 }

@@ -1,27 +1,35 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import AppShell from './components/AppShell.jsx'
 import CargaModal from './components/CargaModal.jsx'
+import ConfiguracoesModal from './components/ConfiguracoesModal.jsx'
 import NovaCargaModal from './components/NovaCargaModal.jsx'
 import Toast from './components/Toast.jsx'
 import { useCargas } from './hooks/useCargas.js'
 import { useCatalogos } from './hooks/useCatalogos.js'
+import { useConfiguracoes } from './hooks/useConfiguracoes.js'
 import { useMe } from './hooks/useMe.js'
 import { useToast } from './hooks/useToast.js'
 import { usuarioPodeEditarModulo } from './utils/regras.js'
 import CadastroPage from './pages/CadastroPage.jsx'
 import CadastrosPage from './pages/CadastrosPage.jsx'
-import DashboardTV from './pages/DashboardTV.jsx'
+import DashboardPage from './pages/DashboardPage.jsx'
 import KanbanPage from './pages/KanbanPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import PainelTV from './pages/PainelTV.jsx'
+
+// Espelhamento: a rota /tv abre o Painel TV em tela cheia, em uma nova guia.
+const ROTA_TV = window.location.pathname === '/tv'
 
 export default function App() {
   const me = useMe()
   const cargasState = useCargas()
   const catalogosState = useCatalogos()
   const { toast, notify, dismiss } = useToast()
+  const [configuracoes, setConfiguracoes] = useConfiguracoes()
   const [telaAuth, setTelaAuth] = useState('login')
   const [pagina, setPagina] = useState('kanban')
   const [novaCargaAberta, setNovaCargaAberta] = useState(false)
+  const [configuracoesAbertas, setConfiguracoesAbertas] = useState(false)
   const [cargaSelecionadaId, setCargaSelecionadaId] = useState(null)
 
   function entrar(perfil) {
@@ -36,9 +44,11 @@ export default function App() {
     await me.sair()
   }
 
-  async function atualizarDados() {
-    await Promise.all([cargasState.refresh(), catalogosState.refresh()])
-  }
+  const { refresh: recarregarCargas } = cargasState
+  const { refresh: recarregarCatalogos } = catalogosState
+  const atualizarDados = useCallback(async () => {
+    await Promise.all([recarregarCargas(), recarregarCatalogos()])
+  }, [recarregarCargas, recarregarCatalogos])
 
   async function criarCarga(dados) {
     const carga = await cargasState.criar(dados)
@@ -51,7 +61,7 @@ export default function App() {
 
   if (me.loading && !me.usuario) {
     return (
-      <main className="grid min-h-screen place-items-center bg-rtc-navy text-sm text-slate-300">
+      <main className="grid min-h-screen place-items-center bg-rtc-navy text-sm text-rtc-mist">
         Carregando...
       </main>
     )
@@ -69,13 +79,13 @@ export default function App() {
     )
   }
 
-  if (pagina === 'tv') {
+  if (ROTA_TV) {
     return (
-      <DashboardTV
+      <PainelTV
         cargas={cargasState.cargas}
+        cancelamentos={cargasState.cancelamentos}
         catalogos={catalogosState}
         onRefresh={atualizarDados}
-        onExit={() => setPagina('kanban')}
         loading={cargasState.loading || catalogosState.loading}
       />
     )
@@ -90,8 +100,9 @@ export default function App() {
         onLogout={sair}
         onRefresh={atualizarDados}
         refreshing={cargasState.loading || catalogosState.loading}
+        onAbrirConfiguracoes={() => setConfiguracoesAbertas(true)}
       >
-        {pagina === 'cadastros' ? (
+        {pagina === 'cadastros' && (
           <CadastrosPage
             catalogos={catalogosState}
             loading={catalogosState.loading}
@@ -99,7 +110,15 @@ export default function App() {
             onRefresh={catalogosState.refresh}
             notify={notify}
           />
-        ) : (
+        )}
+        {pagina === 'dashboard' && (
+          <DashboardPage
+            cargas={cargasState.cargas}
+            cancelamentos={cargasState.cancelamentos}
+            catalogos={catalogosState}
+          />
+        )}
+        {pagina === 'kanban' && (
           <KanbanPage
             cargas={cargasState.cargas}
             catalogos={catalogosState}
@@ -108,6 +127,8 @@ export default function App() {
             error={cargasState.error}
             onCreate={() => setNovaCargaAberta(true)}
             onOpen={setCargaSelecionadaId}
+            onMover={cargasState.mover}
+            notify={notify}
           />
         )}
       </AppShell>
@@ -127,6 +148,13 @@ export default function App() {
           operacoes={cargasState}
           notify={notify}
           onClose={() => setCargaSelecionadaId(null)}
+        />
+      )}
+      {configuracoesAbertas && (
+        <ConfiguracoesModal
+          configuracoes={configuracoes}
+          onChange={setConfiguracoes}
+          onClose={() => setConfiguracoesAbertas(false)}
         />
       )}
       <Toast toast={toast} onDismiss={dismiss} />
