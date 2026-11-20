@@ -6,6 +6,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      # Postgres instalado no Windows (fora do Docker)
+      - DB_HOST=host.docker.internal
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     expose:
       - '3000'
     restart: unless-stopped

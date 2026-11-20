@@ -7,8 +7,8 @@ import { useCargas } from './hooks/useCargas.js'
 import { useCatalogos } from './hooks/useCatalogos.js'
 import { useMe } from './hooks/useMe.js'
 import { useToast } from './hooks/useToast.js'
-import { useUsuarios } from './hooks/useUsuarios.js'
 import { usuarioPodeEditarModulo } from './utils/regras.js'
+import CadastroPage from './pages/CadastroPage.jsx'
 import CadastrosPage from './pages/CadastrosPage.jsx'
 import DashboardTV from './pages/DashboardTV.jsx'
 import KanbanPage from './pages/KanbanPage.jsx'
@@ -16,28 +16,24 @@ import LoginPage from './pages/LoginPage.jsx'
 
 export default function App() {
   const me = useMe()
-  const { usuarios, loading: usuariosLoading, error: usuariosError } = useUsuarios()
   const cargasState = useCargas()
   const catalogosState = useCatalogos()
   const { toast, notify, dismiss } = useToast()
-  const [autenticado, setAutenticado] = useState(false)
+  const [telaAuth, setTelaAuth] = useState('login')
   const [pagina, setPagina] = useState('kanban')
   const [novaCargaAberta, setNovaCargaAberta] = useState(false)
   const [cargaSelecionadaId, setCargaSelecionadaId] = useState(null)
 
-  async function entrar(usuarioId) {
-    await me.entrar(usuarioId)
-    setAutenticado(true)
+  function entrar(perfil) {
+    me.definirUsuario(perfil)
     setPagina('kanban')
   }
 
-  async function trocarUsuario(usuarioId) {
-    try {
-      await me.entrar(usuarioId)
-      notify('Perfil de demonstração atualizado.')
-    } catch (error) {
-      notify(error.message || 'Não foi possível trocar de perfil.', 'error')
-    }
+  async function sair() {
+    setCargaSelecionadaId(null)
+    setNovaCargaAberta(false)
+    setTelaAuth('login')
+    await me.sair()
   }
 
   async function atualizarDados() {
@@ -53,17 +49,23 @@ export default function App() {
 
   const cargaSelecionada = cargasState.cargas.find((carga) => carga.id === cargaSelecionadaId)
 
-  if (!autenticado) {
+  if (me.loading && !me.usuario) {
     return (
-      <>
-        <LoginPage
-          usuarios={usuarios}
-          loading={me.loading || usuariosLoading}
-          error={me.error || usuariosError}
-          onEnter={entrar}
-        />
-        <Toast toast={toast} onDismiss={dismiss} />
-      </>
+      <main className="grid min-h-screen place-items-center bg-rtc-navy text-sm text-slate-300">
+        Carregando...
+      </main>
+    )
+  }
+
+  if (!me.usuario) {
+    return telaAuth === 'cadastro' ? (
+      <CadastroPage onLogin={entrar} onIrParaLogin={() => setTelaAuth('login')} />
+    ) : (
+      <LoginPage
+        erroInicial={me.error}
+        onLogin={entrar}
+        onIrParaCadastro={() => setTelaAuth('cadastro')}
+      />
     )
   }
 
@@ -85,8 +87,7 @@ export default function App() {
         pagina={pagina}
         onNavigate={setPagina}
         usuario={me.usuario}
-        usuarios={usuarios}
-        onUserChange={trocarUsuario}
+        onLogout={sair}
         onRefresh={atualizarDados}
         refreshing={cargasState.loading || catalogosState.loading}
       >

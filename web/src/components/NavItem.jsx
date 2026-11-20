@@ -42,13 +42,13 @@ export default function NavItem({ label, icon, active, compact, onClick }) {
       aria-current={active ? 'page' : undefined}
       onClick={onClick}
       title={compact ? label : undefined}
-      className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-3 text-left text-sm font-medium text-white transition-shadow duration-300 hover:shadow-md hover:shadow-rtc-blue/20 ${
-        active ? 'shadow-lg shadow-rtc-blue/25' : ''
+      className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-3 text-left text-sm font-medium text-white transition-shadow duration-300 ${
+        active ? '' : ''
       }`}
     >
       <span
         aria-hidden="true"
-        className={`absolute inset-0 bg-gradient-to-r from-sky-200 via-rtc-blue/70 to-transparent transition-opacity duration-500 ease-in-out ${
+        className={`absolute inset-0 bg-gradient-to-r from-rtc-blue/70 to-transparent transition-opacity duration-500 ease-in-out ${
           active ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
         }`}
       />

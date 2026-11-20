@@ -1,15 +1,5 @@
 import { STATUS_CARGA } from '../config/modulos.js'
 
-export const usuarios = [
-  {
-    id: 'usr-comercial',
-    nome: 'Marina Costa',
-    email: 'marina@rtc.local',
-    modulos: ['comercial'],
-    avatar: 'MC',
-  },
-]
-
 export const clientes = [
   {
     id: 'cli-01',
@@ -83,18 +73,7 @@ export const cargas = [
 ]
 
 export const database = {
-  usuarios,
   clientes,
   locais_embarque,
   cargas,
-}
-
-let mockUserId = usuarios[0].id
-
-export function getMockUserId() {
-  return mockUserId
-}
-
-export function setMockUserId(userId) {
-  mockUserId = userId
 }

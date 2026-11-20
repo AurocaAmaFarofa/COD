@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { entrarComGoogle, getMe } from '../services/authService.js'
+import { getMe, sair as sairDaApi } from '../services/authService.js'
 
 export function useMe() {
   const [usuario, setUsuario] = useState(null)
@@ -18,16 +18,17 @@ export function useMe() {
     }
   }, [])
 
-  const entrar = useCallback(async (usuarioId) => {
-    setLoading(true)
+  // Recebe o perfil devolvido pelo login/cadastro.
+  const definirUsuario = useCallback((perfil) => {
     setError('')
+    setUsuario(perfil)
+  }, [])
+
+  const sair = useCallback(async () => {
     try {
-      setUsuario(await entrarComGoogle(usuarioId))
-    } catch (requestError) {
-      setError(requestError.message || 'Não foi possível entrar.')
-      throw requestError
+      await sairDaApi()
     } finally {
-      setLoading(false)
+      setUsuario(null)
     }
   }, [])
 
@@ -35,5 +36,5 @@ export function useMe() {
     Promise.resolve().then(refresh)
   }, [refresh])
 
-  return { usuario, loading, error, refresh, entrar }
+  return { usuario, loading, error, refresh, definirUsuario, sair }
 }
